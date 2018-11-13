@@ -1,0 +1,4 @@
+This is a text for testing
+Java NIO classes.
+
+Кирилиця
