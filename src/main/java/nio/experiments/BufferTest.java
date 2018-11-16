@@ -27,6 +27,12 @@ public class BufferTest {
             byteBuffer.clear(); //make buffer ready for writing
             bytesRead = channel.read(byteBuffer);
         }
+
+        byteBuffer.clear();
+        System.out.println("Buffer size: " + byteBuffer.position());
+        byteBuffer.put((byte) 64);
+        System.out.println("Buffer size: " + byteBuffer.position());
+        System.out.println(channel.write(byteBuffer));
         file.close();
     }
 
