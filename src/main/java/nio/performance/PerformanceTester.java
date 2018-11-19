@@ -2,6 +2,7 @@ package nio.performance;
 
 import nio.tools.FileLoader;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,6 +12,8 @@ import java.nio.file.Path;
 
 public class PerformanceTester {
 
+    private final static int BYTES_IN_MB = 1024 * 1024;
+
     private final FileLoader fileLoader = new FileLoader();
     private final String FILE_LOCATION = "performance/test.txt";
     private final Path TEST_FILE_PATH = fileLoader.getPath(FILE_LOCATION);
@@ -18,13 +21,8 @@ public class PerformanceTester {
     public static void main(String[] args) {
         PerformanceTester tester = new PerformanceTester();
 
-        System.out.println("Running buffered stream test with file size 50 MB");
-        long testTime = tester.runBufferedStreamWritingTest(20 * 1024 * 1024);
-        System.out.printf("Test finished. Time: %d ms\n\n", testTime);
-
-        System.out.println("Running channel test with file size 50 MB");
-        testTime = tester.runChannelWritingTest(20 * 1024 * 1024);
-        System.out.printf("Test finished. Time: %d ms\n\n", testTime);
+        tester.runBufferedStreamTest(20 * BYTES_IN_MB);
+        tester.runChannelTest(20 * BYTES_IN_MB);
 
     }
 
@@ -38,7 +36,8 @@ public class PerformanceTester {
         }
     }
 
-    private long runBufferedStreamWritingTest(long fileSizeInBytes) {
+    private void runBufferedStreamTest(long fileSizeInBytes) {
+        System.out.printf("Running buffered writing stream test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
         prepareTestFile();
         long startTime = System.currentTimeMillis();
 
@@ -50,15 +49,33 @@ public class PerformanceTester {
             e.printStackTrace();
         }
         long endTime = System.currentTimeMillis();
-        return endTime - startTime;
+        long testTime = endTime - startTime;
+
+        System.out.printf("Test finished. Time: %d ms\n\n", testTime);
+
+        System.out.printf("Running buffered reading stream test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
+        startTime = System.currentTimeMillis();
+
+        try(BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(TEST_FILE_PATH))) {
+            for (long i = 0; i < fileSizeInBytes; i++) {
+                inputStream.read();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        endTime = System.currentTimeMillis();
+        testTime = endTime - startTime;
+
+        System.out.printf("Test finished. Time: %d ms\n\n", testTime);
     }
 
-    private long runChannelWritingTest(long fileSizeInBytes) {
+    private void runChannelTest(long fileSizeInBytes) {
+        System.out.printf("Running channel writing test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
         prepareTestFile();
         long startTime = System.currentTimeMillis();
 
         try(FileChannel channel = fileLoader.getClassPathFileChannel(FILE_LOCATION)) {
-            ByteBuffer buffer = ByteBuffer.allocate(1 * 1024 * 1024);
+            ByteBuffer buffer = ByteBuffer.allocate(2 * 1024 * 1024);
             for (long i = 0; i < fileSizeInBytes;) {
                 while (buffer.position() < buffer.limit()) {
                     buffer.put((byte)1);
@@ -72,6 +89,28 @@ public class PerformanceTester {
             e.printStackTrace();
         }
         long endTime = System.currentTimeMillis();
-        return endTime - startTime;
+        long testTime = endTime - startTime;
+
+        System.out.printf("Writing test finished. Time: %d ms\n\n", testTime);
+
+        System.out.printf("Running channel reading test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
+        startTime = System.currentTimeMillis();
+
+        try(FileChannel channel = fileLoader.getClassPathFileChannel(FILE_LOCATION)) {
+            ByteBuffer buffer = ByteBuffer.allocate(2 * 1024 * 1024);
+            int bytesRead = channel.read(buffer);
+            while (bytesRead > -1) {
+                buffer.flip();
+                channel.write(buffer);
+                buffer.clear();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        endTime = System.currentTimeMillis();
+        testTime = endTime - startTime;
+
+        System.out.printf("Test finished. Time: %d ms\n\n", testTime);
+
     }
 }
