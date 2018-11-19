@@ -21,9 +21,14 @@ public class PerformanceTester {
     public static void main(String[] args) {
         PerformanceTester tester = new PerformanceTester();
 
-        tester.runBufferedStreamTest(20 * BYTES_IN_MB);
-        tester.runChannelTest(20 * BYTES_IN_MB);
-
+        tester.runBufferedStreamTest(50 * BYTES_IN_MB);
+        tester.runChannelTest(50 * BYTES_IN_MB);
+        tester.runBufferedStreamTest(100 * BYTES_IN_MB);
+        tester.runChannelTest(100 * BYTES_IN_MB);
+        tester.runBufferedStreamTest(500 * BYTES_IN_MB);
+        tester.runChannelTest(500 * BYTES_IN_MB);
+        tester.runBufferedStreamTest(1000 * BYTES_IN_MB);
+        tester.runChannelTest(1000 * BYTES_IN_MB);
     }
 
     private void prepareTestFile() {
@@ -37,7 +42,7 @@ public class PerformanceTester {
     }
 
     private void runBufferedStreamTest(long fileSizeInBytes) {
-        System.out.printf("Running buffered writing stream test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
+        System.out.printf("Running writing buffered stream test with file size %d MB\n", fileSizeInBytes / BYTES_IN_MB);
         prepareTestFile();
         long startTime = System.currentTimeMillis();
 
@@ -101,8 +106,8 @@ public class PerformanceTester {
             int bytesRead = channel.read(buffer);
             while (bytesRead > -1) {
                 buffer.flip();
-                channel.write(buffer);
                 buffer.clear();
+                bytesRead = channel.read(buffer);
             }
         } catch (IOException e) {
             e.printStackTrace();
