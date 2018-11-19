@@ -8,6 +8,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,13 +33,13 @@ public class NIOServer {
 
         Set<SelectionKey> selectionKeys;
         while (true) {
-            int readyAmount = selector.select();
-            System.out.println("Ready amount: " + readyAmount);
+            int readyAmount = selector.selectNow();
             if (readyAmount > 0) {
                 selectionKeys = selector.selectedKeys();
-                for (SelectionKey key : selectionKeys) {
-
-                    ByteBuffer buffer = ByteBuffer.allocate(10 * 1024);
+                Iterator<SelectionKey> keyIterator = selectionKeys.iterator();
+                while (keyIterator.hasNext()) {
+                    SelectionKey key = keyIterator.next();
+                    ByteBuffer buffer = (ByteBuffer)key.attachment();
                     SocketChannel socketChannel = ((SocketChannel)key.channel());
                     socketChannel.socket().setKeepAlive(true);
                     int bytesRead;
@@ -46,6 +47,7 @@ public class NIOServer {
                     buffer.flip();
                     System.out.println(new String(buffer.array(), 0, bytesRead, Charset.defaultCharset()));
                     buffer.clear();
+                    keyIterator.remove();
                 }
             }
         }
@@ -59,7 +61,6 @@ public class NIOServer {
             System.out.println("ERROR: cannot start server instance");
             e.printStackTrace();
         }
-
     }
 
     private class SocketListener implements Runnable {
