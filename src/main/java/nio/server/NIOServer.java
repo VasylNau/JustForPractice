@@ -37,13 +37,14 @@ public class NIOServer {
             if (readyAmount > 0) {
                 selectionKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectionKeys.iterator();
+
                 while (keyIterator.hasNext()) {
                     SelectionKey key = keyIterator.next();
+
                     ByteBuffer buffer = (ByteBuffer)key.attachment();
                     SocketChannel socketChannel = ((SocketChannel)key.channel());
-                    socketChannel.socket().setKeepAlive(true);
-                    int bytesRead;
-                    bytesRead = socketChannel.read(buffer);
+
+                    int bytesRead = socketChannel.read(buffer);
                     buffer.flip();
                     System.out.println(new String(buffer.array(), 0, bytesRead, Charset.defaultCharset()));
                     buffer.clear();
@@ -73,9 +74,9 @@ public class NIOServer {
                     socketChannel.configureBlocking(false);
 
                     System.out.println("Trying to register new connection");
-
-                    socketChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
-
+                    synchronized (selector) {
+                        socketChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+                    }
                     System.out.println("Connection registered");
                 } catch (IOException e) {
                     System.out.println("An error occurred while connecting with client");
