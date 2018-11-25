@@ -2,14 +2,14 @@ USE company;
 
 INSERT INTO department (dept_no, dept_name, location)
 VALUES 
-	("d1", "research", "Dallas"),
+	  ("d1", "research", "Dallas"),
     ("d2", "accounting", "Seattle"),
     ("d3", "marketing", "Dallas");
     
     
 INSERT INTO employee (emp_no, emp_fname, emp_lname, dept_no)
 VALUES
-	(25348, "Matthew", "Smith", "d3"),
+	  (25348, "Matthew", "Smith", "d3"),
     (10102, "Ann", "Jones", "d3"),
     (18316, "John", "Barrimore", "d1"),
     (29346, "James", "James", "d2"),
@@ -27,7 +27,7 @@ VALUES
     
 INSERT INTO works_on (emp_no, project_no, job, enter_date)
 VALUES
-	(10102, "p1", "analyst", "2006-10-01"),
+	  (10102, "p1", "analyst", "2006-10-01"),
     (10102, "p3", "manager", "2008-01-01"),
     (25348, "p2", "clerk", "2007-02-15"),
     (18316, "p2", NULL, "2007-06-01"),
